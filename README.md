@@ -1,5 +1,7 @@
 #  **BookSwap Capstone Project Plan**
 
+RENDER DEPLOYMENT LINK - `https://s63-parv-bookswap.onrender.com`
+
 ##  **1. Project Overview**
 
 BookSwap is a web-based platform that allows users to buy and sell pre-owned books. It provides an intuitive interface where users can list books for sale, browse available books, and request purchases. The platform is designed to facilitate seamless transactions without the complexity of real-time chat.
