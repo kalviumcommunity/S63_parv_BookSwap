@@ -1,12 +1,30 @@
 const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const dotenv = require("dotenv");
+
+dotenv.config(); // Load env variables from .env file
+
+const bookRoutes = require("./routes/bookRoutes");
+
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 3000;
+const MONGO_URI = process.env.MONGO_URI;
 
-app.get('/', (req, res) => {
-    res.send('Welcome TO BOOKSWAP!!');
-});
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
+// Routes
+app.use("/api", bookRoutes);
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port http://localhost:${PORT}`);
-})
+// MongoDB Connection
+mongoose.connect(MONGO_URI)
+  .then(() => {
+    console.log("✅ MongoDB connected");
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running at http://localhost:${PORT}`);
+    });
+  })
+  .catch(err => console.error("❌ MongoDB connection error:", err));
