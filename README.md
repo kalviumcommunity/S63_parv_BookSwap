@@ -1,6 +1,7 @@
 #  **BookSwap Capstone Project Plan**
 
 RENDER DEPLOYMENT LINK - `https://s63-parv-bookswap.onrender.com`
+NETLIFY DEPLOYMENT LINK - `https://stirring-crumble-516475.netlify.app/`
 
 ##  **1. Project Overview**
 
