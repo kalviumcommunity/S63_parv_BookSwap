@@ -1,9 +1,10 @@
 const Book = require("../models/Book");
+const User = require("../models/User");
 
 // GET /books - Fetch all books
 const getAllBooks = async (req, res) => {
   try {
-    const books = await Book.find();
+    const books = await Book.find().populate('user', 'name email');
     res.status(200).json(books);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch books" });
@@ -14,7 +15,7 @@ const getAllBooks = async (req, res) => {
 const getBookById = async (req, res) => {
   try {
     const { id } = req.params;
-    const book = await Book.findById(id);
+    const book = await Book.findById(id).populate('user', 'name email');
 
     if (!book) {
       return res.status(404).json({ message: "Book not found" });
@@ -29,15 +30,30 @@ const getBookById = async (req, res) => {
 // POST /books - Add a new book
 const addBook = async (req, res) => {
   try {
-    const { title, author, genre, description, price, available, user } = req.body;
+    const { title, author, genre, description, price, available, user: userId, imageUrl } = req.body;
 
-    if (!title || !author) {
-      return res.status(400).json({ error: "Title and Author are required" });
+    if (!title || !author || !userId) {
+      return res.status(400).json({ error: "Title, Author, and User ID are required" });
     }
 
-    const newBook = new Book({ title, author, genre, description, imageUrl, price });
-    await newBook.save();
+    // Validate if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
+    const newBook = new Book({
+      title,
+      author,
+      genre,
+      description,
+      price,
+      available,
+      user: userId,
+      imageUrl,
+    });
+
+    await newBook.save();
     res.status(201).json({ message: "Book added successfully", book: newBook });
   } catch (error) {
     res.status(500).json({ error: "Failed to add book", details: error.message });
@@ -47,7 +63,7 @@ const addBook = async (req, res) => {
 // PUT /books/:id - Update an existing book
 const updateBook = async (req, res) => {
   try {
-    const { title, author, description } = req.body;
+    const { title, author, description, genre, price, available } = req.body;
     const { id } = req.params;
 
     const book = await Book.findById(id);
@@ -58,6 +74,9 @@ const updateBook = async (req, res) => {
     if (title) book.title = title;
     if (author) book.author = author;
     if (description) book.description = description;
+    if (genre) book.genre = genre;
+    if (price !== undefined) book.price = price;
+    if (available !== undefined) book.available = available;
 
     const updatedBook = await book.save();
     res.status(200).json({ message: "Book updated successfully", book: updatedBook });

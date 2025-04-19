@@ -7,6 +7,7 @@ dotenv.config(); // Load env variables from .env file
 
 const bookRoutes = require("./routes/bookRoutes");
 
+const userRoutes = require("./routes/userRoutes");
 const app = express();
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
@@ -18,6 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use("/api/books", bookRoutes);
+app.use("/api/users", userRoutes);
 
 // MongoDB Connection
 mongoose.connect(MONGO_URI)
