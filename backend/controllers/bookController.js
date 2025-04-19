@@ -1,4 +1,5 @@
 const Book = require("../models/Book");
+const mongoose = require("mongoose");
 
 // GET /books - Fetch all books
 const getAllBooks = async (req, res) => {
@@ -12,19 +13,21 @@ const getAllBooks = async (req, res) => {
 
 // GET /books/:id - Fetch book by ID
 const getBookById = async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: "Invalid book ID format." });
+  }
+
   try {
-    const { id } = req.params;
     const book = await Book.findById(id);
-
-    if (!book) {
-      return res.status(404).json({ message: "Book not found" });
-    }
-
+    if (!book) return res.status(404).json({ message: "Book not found." });
     res.status(200).json(book);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch book", details: error.message });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch book", details: err.message });
   }
 };
+
 
 // POST /books - Add a new book
 const addBook = async (req, res) => {
@@ -46,25 +49,44 @@ const addBook = async (req, res) => {
 
 // PUT /books/:id - Update an existing book
 const updateBook = async (req, res) => {
-  try {
-    const { title, author, description } = req.body;
-    const { id } = req.params;
+  const { id } = req.params;
 
-    const book = await Book.findById(id);
-    if (!book) {
-      return res.status(404).json({ message: "Book not found" });
+  // Handle invalid ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: "Invalid book ID format." });
+  }
+
+  const updateFields = {};
+  const allowedFields = ["title", "author", "description", "genre", "price"];
+
+  // Collect only valid fields
+  allowedFields.forEach((field) => {
+    if (req.body[field] !== undefined) {
+      updateFields[field] = req.body[field];
+    }
+  });
+
+  // If no valid fields provided
+  if (Object.keys(updateFields).length === 0) {
+    return res.status(400).json({ error: "No valid fields provided for update." });
+  }
+
+  try {
+    const updatedBook = await Book.findByIdAndUpdate(id, updateFields, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updatedBook) {
+      return res.status(404).json({ message: "Book not found." });
     }
 
-    if (title) book.title = title;
-    if (author) book.author = author;
-    if (description) book.description = description;
-
-    const updatedBook = await book.save();
     res.status(200).json({ message: "Book updated successfully", book: updatedBook });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to update book", details: error.message });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update book", details: err.message });
   }
 };
+
 
 module.exports = {
   getAllBooks,
