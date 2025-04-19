@@ -1,6 +1,5 @@
 const Book = require("../models/Book");
 const User = require("../models/User");
-
 // GET /books - Fetch all books
 const getAllBooks = async (req, res) => {
   try {
@@ -10,7 +9,6 @@ const getAllBooks = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch books" });
   }
 };
-
 // GET /books/:id - Fetch book by ID
 const getBookById = async (req, res) => {
   try {
@@ -26,7 +24,6 @@ const getBookById = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch book", details: error.message });
   }
 };
-
 // POST /books - Add a new book
 const addBook = async (req, res) => {
   try {
