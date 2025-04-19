@@ -56,7 +56,6 @@ const addBook = async (req, res) => {
     res.status(500).json({ error: "Failed to add book", details: error.message });
   }
 };
-
 // PUT /books/:id - Update an existing book
 const updateBook = async (req, res) => {
   try {
