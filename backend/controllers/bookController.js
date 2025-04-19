@@ -29,7 +29,7 @@ const getBookById = async (req, res) => {
 // POST /books - Add a new book
 const addBook = async (req, res) => {
   try {
-    const { title, author, genre, description, imageUrl, price } = req.body;
+    const { title, author, genre, description, price, available, user } = req.body;
 
     if (!title || !author) {
       return res.status(400).json({ error: "Title and Author are required" });
@@ -66,9 +66,26 @@ const updateBook = async (req, res) => {
   }
 };
 
+// DELETE /books/:id - Delete a book by ID
+const deleteBook = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedBook = await Book.findByIdAndDelete(id);
+    if (!deletedBook) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+
+    res.status(200).json({ message: "Book deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete book", details: error.message });
+  }
+};
+
 module.exports = {
   getAllBooks,
   getBookById,
   addBook,
   updateBook,
+  deleteBook,
 };
