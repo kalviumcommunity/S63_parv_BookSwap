@@ -17,7 +17,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-// Changed from "/api" to "/api/books" to properly map GET and POST for books
 app.use("/api/books", bookRoutes);
 
 // MongoDB Connection
