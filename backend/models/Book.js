@@ -8,6 +8,10 @@ const bookSchema = new mongoose.Schema(
     price: Number,
     available: Boolean,
 
+    // New fields for description and imageUrl
+    description: { type: String, required: false }, // Description of the book
+    imageUrl: { type: String, required: false }, // URL for the book's image
+    
     // Relationship: Which user created this listing
     user: {
       type: mongoose.Schema.Types.ObjectId,
