@@ -1,88 +1,83 @@
 // src/components/Navbar.jsx
-import React, { useState } from 'react';
+import React from 'react'; // Removed useState as it's handled by context
 import { NavLink, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; // <-- Import useAuth
+
+// Default avatar placeholder
+const defaultAvatar = "https://via.placeholder.com/40/d3d3d3/000000?text=U";
 
 const Navbar = () => {
-  // Set to false to show the logged-out state from the screenshot
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isAuthenticated, user, logout } = useAuth(); // <-- Get auth state and logout function
 
-  // --- Style Definitions (Addressing DRY feedback) ---
-
-  // Base classes for main navigation links (Home, Browse)
+  // --- Style Definitions ---
   const navLinkBaseClasses = "font-sans text-base font-medium text-link-text no-underline hover:text-brand-brown py-2 transition-colors duration-200";
-  const navLinkActiveClasses = "font-bold text-brand-brown"; // Style for the active page link
+  const navLinkActiveClasses = "font-bold text-brand-brown";
+  const getNavLinkClass = ({ isActive }) => isActive ? `${navLinkBaseClasses} ${navLinkActiveClasses}` : navLinkBaseClasses;
+  const getLoginLinkClass = ({ isActive }) => `${navLinkBaseClasses} px-3 ${isActive ? navLinkActiveClasses : ''}`;
+  const buttonClasses = "font-sans text-sm font-semibold text-button-text bg-button-bg hover:bg-button-bg-hover border-none rounded-full py-2 px-5 cursor-pointer transition-colors duration-200 whitespace-nowrap"; // Adjusted padding slightly
+  const signupButtonClasses = `${buttonClasses} inline-block text-center no-underline`;
 
-  // Function to determine active style for NavLink
-  const getNavLinkClass = ({ isActive }) => {
-    return isActive ? `${navLinkBaseClasses} ${navLinkActiveClasses}` : navLinkBaseClasses;
-  };
-
-  // Styling for the Login link (slightly different if needed)
-  const getLoginLinkClass = ({ isActive }) => {
-    const baseClasses = `${navLinkBaseClasses} px-3`; // Add padding or other specific styles
-    return isActive ? `${baseClasses} ${navLinkActiveClasses}` : baseClasses;
-  };
-
-  // Shared button styling for Logout and Signup (Addressing DRY)
-  const buttonClasses = "font-sans text-sm font-semibold text-button-text bg-button-bg hover:bg-button-bg-hover border-none rounded-full py-2.5 px-6 cursor-pointer transition-colors duration-200 whitespace-nowrap";
+  // Construct profile picture URL - **ADJUST 'http://localhost:3000' if needed**
+  const profilePicUrl = user?.profilePic
+      ? `http://localhost:3000${user.profilePic}` // Assuming backend serves uploads at root /uploads/ path
+      : defaultAvatar;
 
 
   return (
-    // --- Addressing ARIA label ---
-    <nav
-      aria-label="Main navigation" // Added ARIA label for accessibility
-      className="w-full flex justify-between items-center py-4 px-10 bg-navbar-bg border-b-2 border-border-blue"
-    >
+    <nav aria-label="Main navigation" className="w-full flex justify-between items-center py-3 px-6 md:px-10 bg-navbar-bg border-b-2 border-border-blue"> {/* Adjusted padding */}
       {/* Brand Logo */}
       <div className="flex-shrink-0">
-        <Link to="/" className="font-serif text-3xl font-bold text-brand-brown no-underline mr-8">
+        <Link to="/" className="font-serif text-2xl md:text-3xl font-bold text-brand-brown no-underline mr-4 md:mr-8">
           BookSwap
         </Link>
       </div>
 
       {/* Navigation Links */}
-      <ul className="list-none flex items-center gap-x-10 m-0 p-0 flex-grow justify-start pl-4">
+      <ul className="list-none hidden sm:flex items-center gap-x-6 md:gap-x-8 m-0 p-0 flex-grow justify-start pl-4"> {/* Adjusted gap/padding */}
         <li><NavLink to="/" className={getNavLinkClass} end>Home</NavLink></li>
         <li><NavLink to="/browse" className={getNavLinkClass}>Browse</NavLink></li>
-        {/* {isLoggedIn && (...)} */}
-      </ul>
-
-      {/* Auth Section */}
-      <ul className="list-none flex items-center gap-x-6 m-0 p-0 flex-shrink-0">
-        {isLoggedIn ? (
-          // Logged In View (Logout Button)
-          <li>
-            <button
-              // --- Addressing Button Type ---
-              type="button" // Explicitly set button type
-              onClick={() => setIsLoggedIn(false)} // Placeholder action
-              // --- Applying shared button styles ---
-              className={buttonClasses}
-            >
-              Logout
-            </button>
-          </li>
-        ) : (
-          // Logged Out View (Login Link, Signup Button)
+        {/* Show Dashboard/Add Book only when authenticated */}
+        {isAuthenticated && (
           <>
-            <li>
-              <NavLink to="/login" className={getLoginLinkClass}>
-                Login
-              </NavLink>
-            </li>
-            <li>
-               <NavLink
-                 to="/signup"
-                 // --- Applying shared button styles ---
-                 className={`${buttonClasses} inline-block text-center no-underline`} // Added helpers for NavLink as button
-               >
-                Signup
-              </NavLink>
-            </li>
+            <li><NavLink to="/dashboard" className={getNavLinkClass}>Dashboard</NavLink></li>
+            <li><NavLink to="/add-book" className={getNavLinkClass}>Add Book</NavLink></li>
+            <li><NavLink to="/wishlist" className={getNavLinkClass}>Wishlist</NavLink></li>
           </>
         )}
       </ul>
+
+      {/* Auth Section & Profile */}
+      <ul className="list-none flex items-center gap-x-3 md:gap-x-4 m-0 p-0 flex-shrink-0">
+        {isAuthenticated && user ? (
+          // Logged In View
+          <>
+            {/* Display User Name and Profile Picture */}
+             <li className="hidden md:flex items-center gap-x-2">
+                 <img
+                    src={profilePicUrl}
+                    alt={user.name || 'User Avatar'}
+                    className="w-8 h-8 rounded-full object-cover border border-gray-300"
+                    onError={(e) => { e.target.onerror = null; e.target.src=defaultAvatar }} // Fallback for broken images
+                  />
+                 <span className="text-sm font-medium text-link-text hidden lg:inline">{user.name}</span>
+             </li>
+            <li>
+              <button type="button" onClick={logout} className={buttonClasses}>
+                Logout
+              </button>
+            </li>
+          </>
+        ) : (
+          // Logged Out View
+          <>
+            <li> <NavLink to="/login" className={getLoginLinkClass}> Login </NavLink> </li>
+            <li> <NavLink to="/signup" className={signupButtonClasses}> Signup </NavLink> </li>
+          </>
+        )}
+      </ul>
+      {/* TODO: Add mobile menu toggle button here */}
     </nav>
+    // TODO: Add mobile menu structure here (conditionally rendered)
   );
 };
 

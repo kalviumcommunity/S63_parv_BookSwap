@@ -1,6 +1,7 @@
 // src/pages/BookDetailsPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; // Import useAuth
 
 // Placeholder image
 const placeholderImage = "https://via.placeholder.com/300/d3d3d3/000000?text=No+Image";
@@ -17,47 +18,60 @@ const placeholderBookDetail = {
 
 // Shared button styling
 const buttonClasses = "inline-block font-sans text-base font-semibold text-button-text bg-button-bg hover:bg-button-bg-hover border-none rounded-md py-3 px-8 cursor-pointer transition-colors duration-200 no-underline";
+const secondaryButtonClasses = "inline-block font-sans text-base font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300 border-none rounded-md py-3 px-8 cursor-pointer transition-colors duration-200 no-underline ml-4";
 
 const BookDetailsPage = () => {
   const { bookId } = useParams(); // Get bookId from URL
   const navigate = useNavigate();
+  const { token, user, isAuthenticated } = useAuth(); // Get auth context
   const [book, setBook] = useState(placeholderBookDetail);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  // TODO: Get current user ID from auth context to prevent requesting own book
-  const currentUserId = 'currentUserPlaceholderId';
+  const [inWishlist, setInWishlist] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+  const currentUserId = user?._id || '';
 
-  // TODO: Implement API call to fetch book details
+  // Check if book is in user's wishlist
+  useEffect(() => {
+    const checkWishlist = async () => {
+      if (!isAuthenticated || !token) return;
+      
+      try {
+        const response = await fetch('/api/users/me/wishlist', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const wishlist = await response.json();
+          setInWishlist(wishlist.some(item => item._id === bookId));
+        }
+      } catch (err) {
+        console.error('Error checking wishlist:', err);
+      }
+    };
+
+    checkWishlist();
+  }, [bookId, token, isAuthenticated]);
   useEffect(() => {
     const fetchBookDetails = async () => {
       setLoading(true);
       setError(null);
       try {
-        // --- Replace with actual API call ---
-        // const response = await fetch(`/api/books/${bookId}`);
-        // if (!response.ok) throw new Error('Book not found or failed to load');
-        // const data = await response.json();
-        // setBook(data);
-
-        // --- Using Placeholder Data ---
-        console.log("Fetching details for book ID:", bookId);
-        await new Promise(resolve => setTimeout(resolve, 700)); // Simulate delay
-         // Find book in placeholder list (replace with real fetch)
-        const foundBook = placeholderBooks.find(b => (b._id || b.id) === bookId) || null;
-        if (foundBook) {
-            // Simulate adding more details
-            setBook({
-                ...foundBook,
-                description: `This is a detailed description for ${foundBook.title}. It talks about the plot, characters, and themes explored within the pages. A must-read for fans of ${foundBook.author}.`,
-                isbn: '978-1234567890', // Example extra detail
-                seller: { name: 'Test Seller', _id: 'seller123'} // Example seller detail
-            });
-        } else {
-             throw new Error('Book not found (placeholder)');
+        // Fetch book details from API
+        const response = await fetch(`/api/books/${bookId}`);
+        
+        if (!response.ok) {
+          throw new Error(response.status === 404 
+            ? 'Book not found' 
+            : 'Failed to load book details');
         }
-        // --- End Placeholder ---
-
+        
+        const data = await response.json();
+        setBook(data);
       } catch (err) {
+        console.error('Error fetching book details:', err);
         setError(err.message);
         setBook(null); // Clear book data on error
       } finally {
@@ -68,21 +82,72 @@ const BookDetailsPage = () => {
     fetchBookDetails();
   }, [bookId]);
 
-  // Placeholder for sending swap request
-  const handleSendRequest = async () => {
-    // TODO: Check if user is logged in
-    // if (!isUserLoggedIn) { navigate('/login'); return; }
+  // Handle adding/removing from wishlist
+  const handleWishlistToggle = async () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: `/book/${bookId}` } });
+      return;
+    }
 
-    console.log(`Sending swap request for book ${bookId}...`);
-    // TODO: Implement API call to backend to create a swap request
-    // try {
-    //    await fetch('/api/requests', { method: 'POST', body: JSON.stringify({ bookId: book._id, requesterId: currentUserId }), ...});
-    //    alert('Swap request sent successfully!');
-    //    // Maybe disable button or show feedback
-    // } catch (err) {
-    //    alert('Failed to send swap request.');
-    // }
-      alert('(Simulated) Swap request sent!');
+    setWishlistLoading(true);
+    try {
+      const url = `/api/users/me/wishlist/${bookId}`;
+      const method = inWishlist ? 'DELETE' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        setInWishlist(!inWishlist);
+      } else {
+        throw new Error('Failed to update wishlist');
+      }
+    } catch (err) {
+      console.error('Wishlist update error:', err);
+      alert('Failed to update wishlist');
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
+  const handleSendRequest = async () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: `/book/${bookId}` } });
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/requests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          bookId: book._id,
+          message: 'I am interested in this book. Please contact me to arrange the swap.',
+          contactDetails: 'You can reach me via email.'
+        })
+      });
+
+      // Parse the response body
+      const data = await response.json();
+      
+      if (!response.ok) {
+        // Use the specific error message from the backend if available
+        throw new Error(data.message || 'Failed to send request');
+      }
+
+      alert('Request sent successfully!');
+      
+      // Optionally redirect to dashboard or disable button
+    } catch (err) {
+      console.error('Send request error:', err);
+      alert(err.message);
+    }
   };
 
 
@@ -92,7 +157,7 @@ const BookDetailsPage = () => {
 
   const imageUrl = book.imageUrl || placeholderImage;
 
-  // Prevent requesting own book (basic check)
+  // Prevent requesting own book
   const isOwnBook = book.seller && book.seller._id === currentUserId;
 
   return (
@@ -126,18 +191,34 @@ const BookDetailsPage = () => {
              <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap">{book.description}</p>
           </div>
 
-           {/* Action Button */}
-           {!isOwnBook ? (
+           {/* Action Buttons */}
+           <div className="flex flex-wrap gap-y-4">
+             {!isOwnBook ? (
+                  <button
+                      onClick={handleSendRequest}
+                      className={buttonClasses}
+                      disabled={!isAuthenticated}
+                  >
+                      {isAuthenticated ? 'Send Swap Request' : 'Login to Request'}
+                  </button>
+             ) : (
+                  <p className="text-sm text-gray-500 italic">This is your own listing.</p>
+             )}
+             
+             {!isOwnBook && (
                 <button
-                    onClick={handleSendRequest}
-                    className={buttonClasses}
-                    // TODO: Disable if request already sent or user not logged in
+                  onClick={handleWishlistToggle}
+                  className={secondaryButtonClasses}
+                  disabled={wishlistLoading}
                 >
-                    Send Swap Request
+                  {wishlistLoading 
+                    ? 'Updating...' 
+                    : inWishlist 
+                      ? 'Remove from Wishlist' 
+                      : 'Add to Wishlist'}
                 </button>
-           ) : (
-                <p className="text-sm text-gray-500 italic">This is your own listing.</p>
-           )}
+             )}
+           </div>
 
         </div>
       </div>

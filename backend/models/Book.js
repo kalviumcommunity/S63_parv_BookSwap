@@ -3,10 +3,13 @@ const mongoose = require('mongoose');
 const bookSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
-    author: String,
+    author: { type: String, required: true },
     genre: String,
-    price: Number,
-    available: Boolean,
+    description: String,
+    condition: { type: String, required: true },
+    price: { type: Number, required: true },
+    available: { type: Boolean, default: true },
+    imageUrl: String,
 
     // Relationship: Which user created this listing
     user: {

@@ -86,8 +86,8 @@ const SignupPage = () => {
         body: formData,
         // No Content-Type header needed for FormData
       });
-      // --- End of FIX ---
-
+      // --- End of FIX ---'
+      
        const data = await response.json(); // Now this expects a valid JSON response from /api/users/register
 
       if (!response.ok) {

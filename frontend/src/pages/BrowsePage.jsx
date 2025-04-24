@@ -18,29 +18,26 @@ const BrowsePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // TODO: Implement API call to fetch books
+  // Fetch books from API
   useEffect(() => {
     const fetchBooks = async () => {
       setLoading(true);
       setError(null);
       try {
-        // --- Replace with actual API call ---
-        // const response = await fetch(`/api/books?search=${searchTerm}`); // Add filters etc.
-        // if (!response.ok) throw new Error('Failed to fetch books');
-        // const data = await response.json();
-        // setBooks(data);
-
-        // --- Using Placeholder Data ---
-        console.log("Fetching books with term:", searchTerm);
-        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
-        const filteredBooks = placeholderBooks.filter(book =>
-            book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            book.author.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setBooks(filteredBooks);
-        // --- End Placeholder ---
-
+        // Build query string for search term
+        const queryParams = searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : '';
+        
+        // Fetch books from API
+        const response = await fetch(`/api/books${queryParams}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch books');
+        }
+        
+        const data = await response.json();
+        setBooks(data);
       } catch (err) {
+        console.error('Error fetching books:', err);
         setError(err.message);
         setBooks([]); // Clear books on error
       } finally {
@@ -48,7 +45,12 @@ const BrowsePage = () => {
       }
     };
 
-    fetchBooks();
+    // Debounce search to avoid too many requests
+    const timeoutId = setTimeout(() => {
+      fetchBooks();
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
   }, [searchTerm]); // Refetch when searchTerm changes
 
   const handleSearchChange = (event) => {

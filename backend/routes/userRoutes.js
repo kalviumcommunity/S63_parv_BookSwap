@@ -2,44 +2,10 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const multer = require('multer'); // Add multer import for error handling
-const upload = require('../controllers/upload'); // <-- Import the upload middleware
-
-// POST /api/users/login - User login
-router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    // Input validation
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required" });
-    }
-
-    // Find user by email
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
-
-    // Compare passwords (plain text comparison for now)
-    // In production, use bcrypt.compare() or similar
-    if (user.password !== password) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
-
-    // Create user object without password
-    const userResponse = user.toObject();
-    delete userResponse.password;
-
-    // Return success response with user data
-    res.status(200).json({ 
-      message: "Login successful", 
-      user: userResponse 
-    });
-  } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ message: "Failed to login", details: error.message });
-  }
-});
+const { uploadProfilePicture } = require('../controllers/upload'); // <-- Import the uploadProfilePicture middleware
+const bcrypt = require('bcrypt'); // <-- Import bcrypt
+const jwt = require('jsonwebtoken'); // <-- Import jsonwebtoken
+const authMiddleware = require('../controllers/auth');
 
 // GET /api/users - Get all users (no changes)
 router.get("/", async (req, res) => {
@@ -68,72 +34,217 @@ router.get("/", async (req, res) => {
       res.status(500).json({ error: "Failed to fetch user", details: error.message });
     }
   });
+// ... (other GET routes remain the same) ...
 
-
-// POST /api/users/register - Modified for file upload
-// Apply the 'upload' middleware here. It expects a single file field named 'profilePicture'.
-router.post("/register", upload, async (req, res) => {
+// POST /api/users/register - Updated to use uploadProfilePicture middleware
+router.post("/register", uploadProfilePicture, async (req, res) => {
   try {
-    // Text fields are now in req.body (thanks to multer parsing multipart/form-data)
     const { name, email, password } = req.body;
 
-    // --- Input Validation ---
     if (!name || !email || !password) {
-        return res.status(400).json({ message: 'Name, email, and password are required.' });
+       return res.status(400).json({ message: 'Name, email, and password are required.' });
     }
-    // Add more validation as needed (email format, password strength)
+    // Add password length validation if desired
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      // If file was uploaded but user exists, you might want to delete the uploaded file here
-      // Requires 'fs' module: fs.unlinkSync(req.file.path);
-      return res.status(400).json({ message: "Email already registered" }); // Changed 'error' to 'message' for consistency
+      return res.status(400).json({ message: "Email already registered" });
     }
 
-    // --- Handle File Upload ---
-    let profilePicPath = null; // Default to null if no file uploaded
+    let profilePicPath = null;
     if (req.file) {
-      // If a file was uploaded, req.file contains its info.
-      // We store the path relative to the server's static serving path.
-      profilePicPath = '/uploads/' + req.file.filename; // Construct the path/URL
-      console.log('Uploaded file:', req.file);
-      console.log('Saving profile pic path:', profilePicPath);
-    } else {
-      console.log('No profile picture uploaded.');
+      profilePicPath = '/uploads/' + req.file.filename;
     }
 
-    // Create new user instance, including the profilePic path if available
+    // --- Hash Password ---
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    // --- End Hash Password ---
+
     const newUser = new User({
         name,
         email,
-        password, // Remember to HASH the password before saving in production!
-        profilePic: profilePicPath // Save the path or null
+        password: hashedPassword, // <-- Save hashed password
+        profilePic: profilePicPath
     });
-
-    // TODO: Hash password before saving
-    // e.g., using bcrypt:
-    // const salt = await bcrypt.genSalt(10);
-    // newUser.password = await bcrypt.hash(newUser.password, salt);
 
     await newUser.save();
 
-    // Exclude password from the response user object
     const userResponse = newUser.toObject();
     delete userResponse.password;
 
     res.status(201).json({ message: "User registered successfully", user: userResponse });
 
   } catch (error) {
-     // Handle potential multer errors (like file type)
-     if (error instanceof multer.MulterError) {
+    // ... (keep existing error handling) ...
+     if (error instanceof require('multer').MulterError) { // Be specific with MulterError import if needed
         return res.status(400).json({ message: `File upload error: ${error.message}` });
      } else if (error.message === 'Error: Images Only!') {
          return res.status(400).json({ message: error.message });
      }
-     // Handle other errors (database, etc.)
     console.error("Registration error:", error);
-    res.status(500).json({ message: "Failed to register user", details: error.message }); // Changed 'error' to 'message'
+    res.status(500).json({ message: "Failed to register user", details: error.message });
   }
 });
+
+// POST /api/users/login - User Login
+router.post("/login", async (req, res) => {
+  try {
+      const { email, password } = req.body;
+
+      if (!email || !password) {
+          return res.status(400).json({ message: "Email and password are required." });
+      }
+
+      // Find user by email
+      const user = await User.findOne({ email });
+      if (!user) {
+          return res.status(401).json({ message: "Invalid credentials." }); // User not found
+      }
+
+      // Compare provided password with stored hash
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+          return res.status(401).json({ message: "Invalid credentials." }); // Password doesn't match
+      }
+
+      // --- Generate JWT ---
+      const payload = {
+          user: {
+              id: user.id, // Include user ID in the token payload
+              name: user.name // Optionally include other non-sensitive info
+          }
+      };
+
+      jwt.sign(
+          payload,
+          process.env.JWT_SECRET, // Your secret key from .env
+          { expiresIn: '1h' }, // Token expiration (e.g., 1 hour)
+          (err, token) => {
+              if (err) throw err;
+
+              // Exclude password from user object sent back
+              const userResponse = user.toObject();
+              delete userResponse.password;
+
+              // Send token and user info (without password)
+              res.status(200).json({
+                  message: "Login successful",
+                  token,
+                  user: userResponse
+              });
+          }
+      );
+      // --- End JWT Generation ---
+
+  } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Server error during login.", details: error.message });
+  }
+});
+
+// GET /api/users/me - Get current logged-in user data
+router.get("/me", authMiddleware, async (req, res) => {
+  try {
+      // req.user.id is attached by authMiddleware
+      const user = await User.findById(req.user.id).select("-password");
+      if (!user) {
+          return res.status(404).json({ message: "User not found" });
+      }
+      res.json(user);
+  } catch (error) {
+      console.error(error.message);
+      res.status(500).send("Server Error");
+  }
+});
+
+// GET /api/users/me/listings - Get listings for current user
+router.get("/me/listings", authMiddleware, async (req, res) => {
+  try {
+      const books = await require('../models/Book').find({ user: req.user.id }); // Find books by user ID from token
+      res.json(books);
+  } catch (error) {
+       console.error(error.message);
+       res.status(500).send("Server Error");
+  }
+});
+
+// GET /api/users/me/wishlist - Get wishlist for current user
+router.get("/me/wishlist", authMiddleware, async (req, res) => {
+  try {
+      const user = await User.findById(req.user.id).populate('wishlist');
+      if (!user) {
+          return res.status(404).json({ message: "User not found" });
+      }
+      res.json(user.wishlist);
+  } catch (error) {
+       console.error(error.message);
+       res.status(500).send("Server Error");
+  }
+});
+
+// POST /api/users/me/wishlist/:bookId - Add book to wishlist
+router.post("/me/wishlist/:bookId", authMiddleware, async (req, res) => {
+  try {
+      const { bookId } = req.params;
+      const userId = req.user.id;
+
+      // Check if book exists
+      const book = await require('../models/Book').findById(bookId);
+      if (!book) {
+          return res.status(404).json({ message: "Book not found" });
+      }
+
+      // Add book to wishlist if not already there
+      const user = await User.findById(userId);
+      if (!user) {
+          return res.status(404).json({ message: "User not found" });
+      }
+
+      // Check if book is already in wishlist
+      if (user.wishlist.includes(bookId)) {
+          return res.status(400).json({ message: "Book already in wishlist" });
+      }
+
+      // Add book to wishlist
+      user.wishlist.push(bookId);
+      await user.save();
+
+      res.status(200).json({ message: "Book added to wishlist", wishlist: user.wishlist });
+  } catch (error) {
+       console.error(error.message);
+       res.status(500).send("Server Error");
+  }
+});
+
+// DELETE /api/users/me/wishlist/:bookId - Remove book from wishlist
+router.delete("/me/wishlist/:bookId", authMiddleware, async (req, res) => {
+  try {
+      const { bookId } = req.params;
+      const userId = req.user.id;
+
+      // Remove book from wishlist
+      const user = await User.findById(userId);
+      if (!user) {
+          return res.status(404).json({ message: "User not found" });
+      }
+
+      // Check if book is in wishlist
+      if (!user.wishlist.includes(bookId)) {
+          return res.status(400).json({ message: "Book not in wishlist" });
+      }
+
+      // Remove book from wishlist
+      user.wishlist = user.wishlist.filter(id => id.toString() !== bookId);
+      await user.save();
+
+      res.status(200).json({ message: "Book removed from wishlist", wishlist: user.wishlist });
+  } catch (error) {
+       console.error(error.message);
+       res.status(500).send("Server Error");
+  }
+});
+
+
 
 module.exports = router;

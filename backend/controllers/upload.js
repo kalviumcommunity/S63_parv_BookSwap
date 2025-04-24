@@ -26,13 +26,23 @@ function checkFileType(file, cb){
   }
 }
 
-// Init upload variable
-const upload = multer({
+// Create multer configuration
+const multerConfig = {
   storage: storage,
-  limits:{fileSize: 5 * 1024 * 1024}, // Optional: Limit file size (e.g., 5MB)
+  limits: {fileSize: 5 * 1024 * 1024}, // Limit file size (e.g., 5MB)
   fileFilter: function(req, file, cb){
     checkFileType(file, cb);
   }
-}).single('profilePicture'); // **Crucial:** 'profilePicture' MUST match the key used in frontend FormData
+};
 
-module.exports = upload;
+// Middleware for profile picture uploads
+const uploadProfilePicture = multer(multerConfig).single('profilePicture');
+
+// Middleware for book image uploads
+const uploadBookImage = multer(multerConfig).single('bookImage');
+
+// Export both middlewares
+module.exports = {
+  uploadProfilePicture,
+  uploadBookImage
+};

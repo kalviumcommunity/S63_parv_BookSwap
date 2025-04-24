@@ -1,10 +1,12 @@
 // src/App.jsx
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+// Removed BrowserRouter import, moved to main.jsx
+import { Routes, Route } from 'react-router-dom';
 
 // Components
 import Navbar from './components/Navbar';
-import Footer from './components/Footer'; // Import Footer
+import Footer from './components/Footer';
+import ProtectedRoute from './pages/ProtectedRoute'; // <-- Import ProtectedRoute
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -14,53 +16,67 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import AddBookPage from './pages/AddBookPage';
 import DashboardPage from './pages/DashboardPage';
-// Import other pages like WishlistPage, MyListingsPage when created
-
-// TODO: Import AuthProvider/Context if implementing global auth state
+import WishlistPage from './pages/WishlistPage';
+import { Link } from 'react-router-dom'; // For NotFoundPage
 
 function App() {
   return (
-    // TODO: Wrap with AuthProvider if needed
-    <Router>
-      <div className="flex flex-col min-h-screen bg-gray-50"> {/* Added default bg */}
+    // AuthProvider is now wrapping in main.jsx
+      <div className="flex flex-col min-h-screen bg-gray-50">
         <Navbar />
-
-        {/* Main content area grows to push footer down */}
         <main className="flex-grow">
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<HomePage />} />
             <Route path="/browse" element={<BrowsePage />} />
-            <Route path="/book/:bookId" element={<BookDetailsPage />} /> {/* Route for book details */}
+            <Route path="/book/:bookId" element={<BookDetailsPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
 
-            {/* TODO: Protected Routes (Wrap these in a component that checks auth) */}
-            <Route path="/add-book" element={<AddBookPage />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            {/* <Route path="/wishlist" element={<WishlistPage />} /> */}
-            {/* <Route path="/my-listings" element={<MyListingsPage />} /> */}
+            {/* Protected Routes */}
+            <Route
+              path="/add-book"
+              element={
+                <ProtectedRoute> {/* <-- Wrap with ProtectedRoute */}
+                  <AddBookPage />
+                </ProtectedRoute>
+              }
+            />
+             <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute> {/* <-- Wrap with ProtectedRoute */}
+                  <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/wishlist"
+              element={
+                <ProtectedRoute>
+                  <WishlistPage />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Catch-all route for 404 */}
             <Route path="*" element={<NotFoundPage />} />
-
           </Routes>
         </main>
-
-        <Footer /> {/* Add Footer */}
+        <Footer />
       </div>
-    </Router>
   );
 }
 
-// Basic 404 Component (can be moved to its own file in pages/)
+// Basic 404 Component
 const NotFoundPage = () => (
-    <div className="text-center py-20">
-        <h1 className="text-4xl font-bold text-brand-brown mb-4">404 - Page Not Found</h1>
-        <p className="text-gray-600">Sorry, the page you are looking for does not exist.</p>
-        <Link to="/" className="text-brand-brown hover:underline mt-4 inline-block">Go to Homepage</Link>
-    </div>
+  <div className="container mx-auto px-4 py-16 text-center">
+    <h1 className="text-4xl font-bold text-gray-800 mb-4">404 - Page Not Found</h1>
+    <p className="text-xl text-gray-600 mb-8">The page you are looking for doesn't exist or has been moved.</p>
+    <Link to="/" className="px-6 py-3 bg-brand-brown text-white rounded-md hover:bg-opacity-90 transition-colors">
+      Return to Home
+    </Link>
+  </div>
 );
-
 
 export default App;

@@ -8,6 +8,7 @@ dotenv.config(); // Load env variables from .env file
 
 const bookRoutes = require("./routes/bookRoutes");
 const userRoutes = require("./routes/userRoutes"); // Corrected variable name
+const requestRoutes = require("./routes/requestRoutes"); // Add request routes
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,6 +27,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 app.use("/api/books", bookRoutes);
 app.use("/api/users", userRoutes); // Use the correct variable name
+app.use("/api/requests", requestRoutes); // Add request routes
 
 // Default route (optional)
 app.get('/', (req, res) => {
