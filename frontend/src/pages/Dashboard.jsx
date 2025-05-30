@@ -199,6 +199,9 @@ const Dashboard = () => {
                           <span className="font-medium">{req.requester?.name || 'Someone'}</span> requested 
                           <span className="font-medium"> {req.book?.title || 'your book'}</span>
                         </p>
+                        {req.requester?.email && (
+                          <p className="text-sm text-gray-500 mb-1">{req.requester.email}</p>
+                        )}
                         <p className="text-sm text-gray-600 mb-2">{req.message}</p>
                         {req.status === 'pending' ? (
                           <div className="flex gap-x-3 mt-2">

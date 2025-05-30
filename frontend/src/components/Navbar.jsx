@@ -1,5 +1,5 @@
 // src/components/Navbar.jsx
-import React from 'react'; // Removed useState as it's handled by context
+import React, { useState } from 'react'; // Added useState
 import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; // <-- Import useAuth
 
@@ -8,6 +8,7 @@ const defaultAvatar = "https://via.placeholder.com/40/d3d3d3/000000?text=U";
 
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth(); // <-- Get auth state and logout function
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // --- Style Definitions ---
   const navLinkBaseClasses = "font-sans text-base font-medium text-link-text no-underline hover:text-brand-brown py-2 transition-colors duration-200";

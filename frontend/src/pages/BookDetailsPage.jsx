@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; // Import useAuth
+import SwapRequestModal from '../components/SwapRequestModal'; // Import the modal
 
 // Placeholder image
 const placeholderImage = "https://via.placeholder.com/300/d3d3d3/000000?text=No+Image";
@@ -32,6 +33,8 @@ const BookDetailsPage = () => {
   const [inWishlist, setInWishlist] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const currentUserId = user?._id || '';
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false); // Modal state
+  const [modalError, setModalError] = useState('');
 
   // Check if book is in user's wishlist
   useEffect(() => {
@@ -115,12 +118,19 @@ const BookDetailsPage = () => {
       setWishlistLoading(false);
     }
   };
-  const handleSendRequest = async () => {
+
+  // Replace handleSendRequest with modal logic
+  const handleSendRequest = () => {
     if (!isAuthenticated) {
       navigate('/login', { state: { from: `/book/${bookId}` } });
       return;
     }
+    setIsRequestModalOpen(true);
+  };
 
+  // Handler for modal submission
+  const handleModalSubmitRequest = async (requestData) => {
+    setModalError('');
     try {
       const response = await fetch(`${API_URL}/api/requests`, {
         method: 'POST',
@@ -129,29 +139,25 @@ const BookDetailsPage = () => {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          bookId: book._id,
-          message: 'I am interested in this book. Please contact me to arrange the swap.',
-          contactDetails: 'You can reach me via email.'
+          bookId: requestData.bookId,
+          message: requestData.message,
+          contactInfo: {
+            method: requestData.contactMethod,
+            value: requestData.contactDetails
+          }
         })
       });
-
-      // Parse the response body
       const data = await response.json();
-      
       if (!response.ok) {
-        // Use the specific error message from the backend if available
         throw new Error(data.message || 'Failed to send request');
       }
-
       alert('Request sent successfully!');
-      
-      // Optionally redirect to dashboard or disable button
+      setIsRequestModalOpen(false);
     } catch (err) {
-      console.error('Send request error:', err);
-      alert(err.message);
+      setModalError(err.message || 'Failed to send request.');
+      throw err; // So modal can show error
     }
   };
-
 
   if (loading) return <p className="text-center py-10">Loading book details...</p>;
   if (error) return <p className="text-center text-red-500 py-10">Error: {error}</p>;
@@ -199,13 +205,13 @@ const BookDetailsPage = () => {
                   <button
                       onClick={handleSendRequest}
                       className={buttonClasses}
-                      disabled={!isAuthenticated}
+                      disabled={isOwnBook}
                   >
-                      {isAuthenticated ? 'Send Swap Request' : 'Login to Request'}
+                    Send Swap Request
                   </button>
-             ) : (
-                  <p className="text-sm text-gray-500 italic">This is your own listing.</p>
-             )}
+              ) : (
+                <span className="text-gray-400 italic">You cannot request your own book.</span>
+              )}
              
              {!isOwnBook && (
                 <button
@@ -224,6 +230,16 @@ const BookDetailsPage = () => {
 
         </div>
       </div>
+
+      {/* Swap Request Modal */}
+      <SwapRequestModal
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
+        book={book}
+        onSendRequest={handleModalSubmitRequest}
+        token={token}
+        userEmail={user?.email || ''}
+      />
     </div>
   );
 };
