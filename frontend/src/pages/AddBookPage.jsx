@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; // <-- Import useAuth hook
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 const AddBookPage = () => {
   // Form State
   const [title, setTitle] = useState('');
@@ -89,7 +91,7 @@ const AddBookPage = () => {
 
     // --- Actual API Call ---
     try {
-      const response = await fetch('/api/books', { // Your backend endpoint to add books
+      const response = await fetch(`${API_URL}/api/books`, {
         method: 'POST',
         headers: {
           // Content-Type is set automatically by browser for FormData

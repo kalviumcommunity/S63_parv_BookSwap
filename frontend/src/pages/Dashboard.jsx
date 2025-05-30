@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; // <-- Import useAuth
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 const Dashboard = () => {
   const { token } = useAuth(); // <-- Get token
   const [myListings, setMyListings] = useState([]);
@@ -23,13 +25,13 @@ const Dashboard = () => {
         try {
             // Fetch all data in parallel
             const [listingsRes, incomingReqRes, outgoingReqRes] = await Promise.all([
-                fetch('/api/users/me/listings', {
+                fetch(`${API_URL}/api/users/me/listings`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 }),
-                fetch('/api/requests/incoming', {
+                fetch(`${API_URL}/api/requests/incoming`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 }),
-                fetch('/api/requests/outgoing', {
+                fetch(`${API_URL}/api/requests/outgoing`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 })
             ]);
@@ -64,7 +66,7 @@ const Dashboard = () => {
   // Action handlers for requests and listings
   const handleAcceptRequest = async (requestId) => {
     try {
-      const response = await fetch(`/api/requests/${requestId}`, {
+      const response = await fetch(`${API_URL}/api/requests/${requestId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -89,7 +91,7 @@ const Dashboard = () => {
 
   const handleDeclineRequest = async (requestId) => {
     try {
-      const response = await fetch(`/api/requests/${requestId}`, {
+      const response = await fetch(`${API_URL}/api/requests/${requestId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -114,7 +116,7 @@ const Dashboard = () => {
 
   const handleCancelRequest = async (requestId) => {
     try {
-      const response = await fetch(`/api/requests/${requestId}`, {
+      const response = await fetch(`${API_URL}/api/requests/${requestId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -139,7 +141,7 @@ const Dashboard = () => {
 
   const handleRemoveListing = async (listingId) => {
     try {
-      const response = await fetch(`/api/books/${listingId}`, {
+      const response = await fetch(`${API_URL}/api/books/${listingId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

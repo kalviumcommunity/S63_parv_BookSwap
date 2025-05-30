@@ -19,6 +19,8 @@ const SignupPage = () => {
   const buttonClasses = "w-full font-sans text-base font-semibold text-button-text bg-button-bg hover:bg-button-bg-hover border-none rounded-md py-3 px-6 cursor-pointer transition-colors duration-200 disabled:opacity-50";
   const labelClasses = "block text-sm font-medium text-gray-700 pb-1";
 
+  const API_URL = import.meta.env.VITE_API_URL || '';
+
   // Handler for profile picture file selection
   const handleProfilePictureChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -80,13 +82,11 @@ const SignupPage = () => {
 
     // --- Actual API Call ---
     try {
-      // --- FIX: Change the URL here ---
-      const response = await fetch('/api/users/register', { // CORRECTED URL
+      const response = await fetch(`${API_URL}/api/users/register`, {
         method: 'POST',
         body: formData,
         // No Content-Type header needed for FormData
       });
-      // --- End of FIX ---'
       
        const data = await response.json(); // Now this expects a valid JSON response from /api/users/register
 

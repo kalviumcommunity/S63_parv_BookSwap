@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import BookCard from '../components/BookCard';
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 const WishlistPage = () => {
   const { token } = useAuth();
   const [wishlist, setWishlist] = useState([]);
@@ -22,7 +24,7 @@ const WishlistPage = () => {
       setError(null);
 
       try {
-        const response = await fetch('/api/users/me/wishlist', {
+        const response = await fetch(`${API_URL}/api/users/me/wishlist`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -49,7 +51,7 @@ const WishlistPage = () => {
     if (!token) return;
 
     try {
-      const response = await fetch(`/api/users/me/wishlist/${bookId}`, {
+      const response = await fetch(`${API_URL}/api/users/me/wishlist/${bookId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

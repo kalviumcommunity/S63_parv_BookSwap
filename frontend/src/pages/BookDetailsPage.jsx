@@ -20,6 +20,8 @@ const placeholderBookDetail = {
 const buttonClasses = "inline-block font-sans text-base font-semibold text-button-text bg-button-bg hover:bg-button-bg-hover border-none rounded-md py-3 px-8 cursor-pointer transition-colors duration-200 no-underline";
 const secondaryButtonClasses = "inline-block font-sans text-base font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300 border-none rounded-md py-3 px-8 cursor-pointer transition-colors duration-200 no-underline ml-4";
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 const BookDetailsPage = () => {
   const { bookId } = useParams(); // Get bookId from URL
   const navigate = useNavigate();
@@ -37,7 +39,7 @@ const BookDetailsPage = () => {
       if (!isAuthenticated || !token) return;
       
       try {
-        const response = await fetch('/api/users/me/wishlist', {
+        const response = await fetch(`${API_URL}/api/users/me/wishlist`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -60,7 +62,7 @@ const BookDetailsPage = () => {
       setError(null);
       try {
         // Fetch book details from API
-        const response = await fetch(`/api/books/${bookId}`);
+        const response = await fetch(`${API_URL}/api/books/${bookId}`);
         
         if (!response.ok) {
           throw new Error(response.status === 404 
@@ -91,7 +93,7 @@ const BookDetailsPage = () => {
 
     setWishlistLoading(true);
     try {
-      const url = `/api/users/me/wishlist/${bookId}`;
+      const url = `${API_URL}/api/users/me/wishlist/${bookId}`;
       const method = inWishlist ? 'DELETE' : 'POST';
       
       const response = await fetch(url, {
@@ -120,7 +122,7 @@ const BookDetailsPage = () => {
     }
 
     try {
-      const response = await fetch('/api/requests', {
+      const response = await fetch(`${API_URL}/api/requests`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

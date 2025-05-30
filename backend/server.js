@@ -18,7 +18,7 @@ const MONGO_URI = process.env.MONGO_URI;
 const allowedOrigins = [
   'http://localhost:5173', // Vite dev server
   'http://localhost:3000', // Local development
-  'https://book-swap-lac.vercel.app/', // Your Vercel domain 
+  'https://book-swap-lac.vercel.app', // No trailing slash
 ];
 
 const corsOptions = {

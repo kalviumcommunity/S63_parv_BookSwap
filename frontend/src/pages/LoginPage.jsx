@@ -11,6 +11,8 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth(); // <-- Get login function from context
 
+  const API_URL = import.meta.env.VITE_API_URL || '';
+
   // Login handler updated to use AuthContext
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -18,7 +20,7 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/users/login', { // Backend login endpoint
+      const response = await fetch(`${API_URL}/api/users/login`, { // Backend login endpoint
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

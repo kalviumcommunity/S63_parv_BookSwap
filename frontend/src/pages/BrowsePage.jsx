@@ -12,6 +12,8 @@ const placeholderBooks = [
   { _id: '6', title: 'The Hobbit', author: 'J.R.R. Tolkien', price: 14.00, condition: 'Very Good', imageUrl: 'https://via.placeholder.com/150/FF00FF/FFFFFF?text=Book6' },
 ];
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 const BrowsePage = () => {
   const [books, setBooks] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -28,7 +30,7 @@ const BrowsePage = () => {
         const queryParams = searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : '';
         
         // Fetch books from API
-        const response = await fetch(`/api/books${queryParams}`);
+        const response = await fetch(`${API_URL}/api/books${queryParams}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch books');
