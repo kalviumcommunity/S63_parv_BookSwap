@@ -1,0 +1,11 @@
+meta {
+  name: addToWishlist
+  type: http
+  seq: 5
+}
+
+post {
+  url:  {{baseUrl}}/users/me/wishlist/<bookId>
+  body: none
+  auth: inherit
+}
