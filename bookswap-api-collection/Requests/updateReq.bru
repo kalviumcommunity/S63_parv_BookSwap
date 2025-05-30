@@ -1,0 +1,11 @@
+meta {
+  name: updateReq
+  type: http
+  seq: 5
+}
+
+put {
+  url:  {{baseUrl}}/requests/<bookId>
+  body: none
+  auth: inherit
+}
