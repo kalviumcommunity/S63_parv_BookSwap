@@ -8,7 +8,7 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: process.env.NODE_ENV === 'production' 
-          ? 'https://bookswap-xmle.onrender.com'
+          ? 'https://bookswap-f15c.onrender.com'
           : 'http://localhost:3000',
         changeOrigin: true,
         secure: false,
