@@ -36,7 +36,127 @@ router.get("/", async (req, res) => {
   });
 // ... (other GET routes remain the same) ...
 
+// POST /api/users/register - Updated to use uploadProfilePicture middleware
+router.post("/register", uploadProfilePicture, async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
 
+    if (!name || !email || !password) {
+       return res.status(400).json({ message: 'Name, email, and password are required.' });
+    }
+    // Add password length validation if desired
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already registered" });
+    }
+
+    let profilePicPath = null;
+    if (req.file) {
+      profilePicPath = '/uploads/' + req.file.filename;
+    }
+
+    // --- Hash Password ---
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    // --- End Hash Password ---
+
+    const newUser = new User({
+        name,
+        email,
+        password: hashedPassword, // <-- Save hashed password
+        profilePic: profilePicPath
+    });
+
+    await newUser.save();
+
+    const userResponse = newUser.toObject();
+    delete userResponse.password;
+
+    res.status(201).json({ message: "User registered successfully", user: userResponse });
+
+  } catch (error) {
+    // ... (keep existing error handling) ...
+     if (error instanceof require('multer').MulterError) { // Be specific with MulterError import if needed
+        return res.status(400).json({ message: `File upload error: ${error.message}` });
+     } else if (error.message === 'Error: Images Only!') {
+         return res.status(400).json({ message: error.message });
+     }
+    console.error("Registration error:", error);
+    res.status(500).json({ message: "Failed to register user", details: error.message });
+  }
+});
+
+// POST /api/users/login - User Login
+router.post("/login", async (req, res) => {
+  try {
+      const { email, password } = req.body;
+
+      if (!email || !password) {
+          return res.status(400).json({ message: "Email and password are required." });
+      }
+
+      // Find user by email
+      const user = await User.findOne({ email });
+      if (!user) {
+          return res.status(401).json({ message: "Invalid credentials." }); // User not found
+      }
+
+      // Compare provided password with stored hash
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+          return res.status(401).json({ message: "Invalid credentials." }); // Password doesn't match
+      }
+
+      // --- Generate JWT ---
+      const payload = {
+          user: {
+              id: user.id, // Include user ID in the token payload
+              name: user.name // Optionally include other non-sensitive info
+          }
+      };
+
+      jwt.sign(
+          payload,
+          process.env.JWT_SECRET, // Your secret key from .env
+          { expiresIn: '1h' }, // Token expiration (e.g., 1 hour)
+          (err, token) => {
+              if (err) throw err;
+
+              // Exclude password from user object sent back
+              const userResponse = user.toObject();
+              delete userResponse.password;
+
+              // Send token and user info (without password)
+              res.status(200).json({
+                  message: "Login successful",
+                  token,
+                  user: userResponse
+              });
+          }
+      );
+      // --- End JWT Generation ---
+
+  } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Server error during login.", details: error.message });
+  }
+});
+
+// GET /api/users/me - Get current logged-in user data
+router.get("/me", authMiddleware, async (req, res) => {
+  try {
+      // req.user.id is attached by authMiddleware
+      const user = await User.findById(req.user.id).select("-password");
+      if (!user) {
+          return res.status(404).json({ message: "User not found" });
+      }
+      res.json(user);
+  } catch (error) {
+      console.error(error.message);
+      res.status(500).send("Server Error");
+  }
+});
 
 // GET /api/users/me/listings - Get listings for current user
 router.get("/me/listings", authMiddleware, async (req, res) => {
