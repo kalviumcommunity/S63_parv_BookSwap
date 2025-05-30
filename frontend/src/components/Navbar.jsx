@@ -17,9 +17,10 @@ const Navbar = () => {
   const buttonClasses = "font-sans text-sm font-semibold text-button-text bg-button-bg hover:bg-button-bg-hover border-none rounded-full py-2 px-5 cursor-pointer transition-colors duration-200 whitespace-nowrap"; // Adjusted padding slightly
   const signupButtonClasses = `${buttonClasses} inline-block text-center no-underline`;
 
-  // Construct profile picture URL - **ADJUST 'http://localhost:3000' if needed**
+  // Construct profile picture URL - Use the deployed API URL in production
+  const baseUrl = import.meta.env.PROD ? 'https://bookswap-xmle.onrender.com' : 'http://localhost:3000';
   const profilePicUrl = user?.profilePic
-      ? `http://localhost:3000${user.profilePic}` // Assuming backend serves uploads at root /uploads/ path
+      ? `${baseUrl}${user.profilePic}` // Assuming backend serves uploads at root /uploads/ path
       : defaultAvatar;
 
 
