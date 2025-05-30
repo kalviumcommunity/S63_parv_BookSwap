@@ -1,6 +1,6 @@
 // controllers/bookController.js
 const Book = require("../models/Book");
-// No longer need 'User' model here unless doing complex population beyond basic fetch
+
 
 // GET /api/books - Fetch all books (Public)
 const getAllBooks = async (req, res) => {

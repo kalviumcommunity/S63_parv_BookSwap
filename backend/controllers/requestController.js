@@ -97,52 +97,7 @@ const getOutgoingRequests = async (req, res) => {
   }
 };
 
-// Update request status (accept, decline, cancel)
-const updateRequestStatus = async (req, res) => {
-  try {
-    const { id: requestId } = req.params;
-    const { status } = req.body;
-    const userId = req.user.id; // From auth middleware
 
-    // Validate status
-    if (!['accepted', 'declined', 'cancelled'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status. Must be accepted, declined, or cancelled' });
-    }
-
-    // Find the request
-    const request = await Request.findById(requestId);
-    if (!request) {
-      return res.status(404).json({ message: 'Request not found' });
-    }
-
-    // Check authorization based on the action
-    if ((status === 'accepted' || status === 'declined') && request.seller.toString() !== userId) {
-      return res.status(403).json({ message: 'Only the seller can accept or decline requests' });
-    }
-
-    if (status === 'cancelled' && request.requester.toString() !== userId) {
-      return res.status(403).json({ message: 'Only the requester can cancel requests' });
-    }
-
-    // Update the request status
-    request.status = status;
-    await request.save();
-
-    // Return the updated request with populated fields
-    const updatedRequest = await Request.findById(requestId)
-      .populate('book', 'title author price condition')
-      .populate('seller', 'name email')
-      .populate('requester', 'name email');
-
-    res.status(200).json({
-      message: `Request ${status} successfully`,
-      request: updatedRequest
-    });
-  } catch (error) {
-    console.error('Update request status error:', error);
-    res.status(500).json({ message: 'Failed to update request status', details: error.message });
-  }
-};
 
 module.exports = {
   createRequest,
