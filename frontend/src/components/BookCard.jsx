@@ -1,9 +1,7 @@
 // src/components/BookCard.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
-
-// Placeholder image if book has no image URL
-const placeholderImage = "https://via.placeholder.com/150/d3d3d3/000000?text=No+Image";
+import { smallBookPlaceholder } from '../assets/placeholders';
 
 const BookCard = ({ book }) => {
   // Basic validation for book prop
@@ -12,7 +10,7 @@ const BookCard = ({ book }) => {
   }
 
   // Default values in case properties are missing
-  const imageUrl = book.imageUrl || placeholderImage;
+  const imageUrl = book.imageUrl || smallBookPlaceholder;
   const title = book.title || 'Untitled Book';
   const author = book.author || 'Unknown Author';
   const price = book.price !== undefined ? `$${book.price.toFixed(2)}` : 'Price not set';
@@ -28,7 +26,7 @@ const BookCard = ({ book }) => {
              src={imageUrl}
              alt={`Cover of ${title}`}
              className="object-cover object-center w-full h-full group-hover:opacity-90 transition-opacity duration-300"
-             onError={(e) => { e.target.onerror = null; e.target.src=placeholderImage }} // Handle broken images
+             onError={(e) => { e.target.onerror = null; e.target.src=smallBookPlaceholder }} // Handle broken images
            />
         </div>
 

@@ -1,7 +1,7 @@
 // routes/bookRoutes.js
 const express = require("express");
 const router = express.Router();
-const auth = require('../controllers/auth'); // Your authentication middleware
+const auth = require('../middleware/authMiddleware'); // Your authentication middleware
 const { uploadBookImage } = require('../controllers/upload'); // Import the uploadBookImage middleware
 const {
   getAllBooks,
