@@ -1,18 +1,19 @@
 // src/App.jsx
 import React from 'react';
-// Removed BrowserRouter import, moved to main.jsx
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 
 // Components
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './pages/ProtectedRoute'; // <-- Import ProtectedRoute
+import LoginPage from './pages/LoginPage';
 
 // Pages
 import HomePage from './pages/HomePage';
 import BrowsePage from './pages/BrowsePage';
 import BookDetailsPage from './pages/BookDetailsPage';
-import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import AddBookPage from './pages/AddBookPage';
 import DashboardPage from './pages/DashboardPage';
@@ -21,50 +22,53 @@ import { Link } from 'react-router-dom'; // For NotFoundPage
 
 function App() {
   return (
-    // AuthProvider is now wrapping in main.jsx
-      <div className="flex flex-col min-h-screen bg-gray-50">
-        <Navbar />
-        <main className="flex-grow">
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <AuthProvider>
+        <div className="flex flex-col min-h-screen bg-gray-50">
+          <Navbar />
+          <main className="flex-grow">
           <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/browse" element={<BrowsePage />} />
-            <Route path="/book/:bookId" element={<BookDetailsPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
+                {/* Public Routes */}
+                <Route path="/" element={<HomePage />} />
+                <Route path="/browse" element={<BrowsePage />} />
+                <Route path="/book/:bookId" element={<BookDetailsPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup" element={<SignupPage />} />
 
-            {/* Protected Routes */}
-            <Route
-              path="/add-book"
-              element={
-                <ProtectedRoute> {/* <-- Wrap with ProtectedRoute */}
-                  <AddBookPage />
-                </ProtectedRoute>
-              }
-            />
-             <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute> {/* <-- Wrap with ProtectedRoute */}
-                  <DashboardPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/wishlist"
-              element={
-                <ProtectedRoute>
-                  <WishlistPage />
-                </ProtectedRoute>
-              }
-            />
+                {/* Protected Routes */}
+                <Route
+                  path="/add-book"
+                  element={
+                    <ProtectedRoute> {/* <-- Wrap with ProtectedRoute */}
+                      <AddBookPage />
+                    </ProtectedRoute>
+                  }
+                />
+                 <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute> {/* <-- Wrap with ProtectedRoute */}
+                      <DashboardPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/wishlist"
+                  element={
+                    <ProtectedRoute>
+                      <WishlistPage />
+                    </ProtectedRoute>
+                  }
+                />
 
-            {/* Catch-all route for 404 */}
-            <Route path="*" element={<NotFoundPage />} />
+                {/* Catch-all route for 404 */}
+                <Route path="*" element={<NotFoundPage />} />
           </Routes>
-        </main>
-        <Footer />
-      </div>
+          </main>
+          <Footer />
+        </div>
+      </AuthProvider>
+    </GoogleOAuthProvider>
   );
 }
 

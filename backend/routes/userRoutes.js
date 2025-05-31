@@ -5,7 +5,7 @@ const multer = require('multer'); // Add multer import for error handling
 const { uploadProfilePicture } = require('../controllers/upload'); // <-- Import the uploadProfilePicture middleware
 const bcrypt = require('bcrypt'); // <-- Import bcrypt
 const jwt = require('jsonwebtoken'); // <-- Import jsonwebtoken
-const authMiddleware = require('../controllers/auth');
+const authMiddleware = require('../middleware/authMiddleware');
 
 // GET /api/users - Get all users (no changes)
 router.get("/", async (req, res) => {

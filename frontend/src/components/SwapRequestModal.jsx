@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { largeBookPlaceholder } from '../assets/placeholders';
 
 const SwapRequestModal = ({ isOpen, onClose, book, onSendRequest, token, userEmail }) => {
   const [message, setMessage] = useState('');
@@ -48,7 +49,7 @@ const SwapRequestModal = ({ isOpen, onClose, book, onSendRequest, token, userEma
           {/* Book Info */}
           <div className="flex items-center bg-gray-100 rounded-lg p-4 mb-6">
             <img
-              src={book?.imageUrl || 'https://via.placeholder.com/400x600?text=400+x+600'}
+              src={book?.imageUrl || largeBookPlaceholder}
               alt={book?.title}
               className="w-20 h-28 object-cover rounded mr-4 bg-gray-200"
             />

@@ -3,9 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; // Import useAuth
 import SwapRequestModal from '../components/SwapRequestModal'; // Import the modal
+import { bookPlaceholder } from '../assets/placeholders'; // Import placeholder image
 
-// Placeholder image
-const placeholderImage = "https://via.placeholder.com/300/d3d3d3/000000?text=No+Image";
 // Placeholder data structure
 const placeholderBookDetail = {
   title: 'Loading Book...',
@@ -13,7 +12,7 @@ const placeholderBookDetail = {
   description: 'Loading description...',
   price: 0.00,
   condition: 'Loading...',
-  imageUrl: placeholderImage,
+  imageUrl: bookPlaceholder,
   seller: { name: 'Loading Seller...', _id: 'loading' }, // Assuming seller info is populated
 };
 
@@ -163,7 +162,7 @@ const BookDetailsPage = () => {
   if (error) return <p className="text-center text-red-500 py-10">Error: {error}</p>;
   if (!book) return <p className="text-center py-10">Book not found.</p>;
 
-  const imageUrl = book.imageUrl || placeholderImage;
+  const imageUrl = book.imageUrl || bookPlaceholder;
 
   // Prevent requesting own book
   const isOwnBook = book.seller && book.seller._id === currentUserId;
@@ -177,7 +176,7 @@ const BookDetailsPage = () => {
              src={imageUrl}
              alt={`Cover of ${book.title}`}
              className="w-full h-auto object-contain rounded-md shadow-md max-h-[500px]"
-             onError={(e) => { e.target.onerror = null; e.target.src=placeholderImage }}
+             onError={(e) => { e.target.onerror = null; e.target.src=bookPlaceholder }}
            />
         </div>
 

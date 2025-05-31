@@ -2,9 +2,7 @@
 import React, { useState } from 'react'; // Added useState
 import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; // <-- Import useAuth
-
-// Default avatar placeholder
-const defaultAvatar = "https://via.placeholder.com/40/d3d3d3/000000?text=U";
+import { userAvatarPlaceholder } from '../assets/placeholders'; // Import placeholder image
 
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth(); // <-- Get auth state and logout function
@@ -22,7 +20,7 @@ const Navbar = () => {
   const baseUrl = import.meta.env.PROD ? 'https://bookswap-xmle.onrender.com' : 'http://localhost:3000';
   const profilePicUrl = user?.profilePic
       ? `${baseUrl}${user.profilePic}` // Assuming backend serves uploads at root /uploads/ path
-      : defaultAvatar;
+      : userAvatarPlaceholder;
 
 
   return (
@@ -59,7 +57,7 @@ const Navbar = () => {
                     src={profilePicUrl}
                     alt={user.name || 'User Avatar'}
                     className="w-8 h-8 rounded-full object-cover border border-gray-300"
-                    onError={(e) => { e.target.onerror = null; e.target.src=defaultAvatar }} // Fallback for broken images
+                    onError={(e) => { e.target.onerror = null; e.target.src=userAvatarPlaceholder }} // Fallback for broken images
                   />
                  <span className="text-sm font-medium text-link-text hidden lg:inline">{user.name}</span>
              </li>

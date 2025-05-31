@@ -24,7 +24,19 @@ const userSchema = new mongoose.Schema({
   wishlist: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Book'
-  }]
+  }],
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  profilePicture: {
+    type: String
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
 }, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);

@@ -4,14 +4,19 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require('path'); // <-- Import path module
 
-dotenv.config(); // Load env variables from .env file
+// Load env variables from .env file first
+dotenv.config();
+
+// Then require modules that need environment variables
+const passport = require('./config/passport');
+const authRoutes = require('./routes/auth');
 
 const bookRoutes = require("./routes/bookRoutes");
 const userRoutes = require("./routes/userRoutes"); // Corrected variable name
 const requestRoutes = require("./routes/requestRoutes"); // Add request routes
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
 // CORS Configuration
@@ -41,6 +46,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json()); // Still needed for other JSON routes
 app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
+app.use(passport.initialize());
 
 // --- Serve Static Files from 'uploads' directory ---
 // This makes files inside './uploads/' accessible via '/uploads/filename.ext' URL path
@@ -51,6 +57,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use("/api/books", bookRoutes);
 app.use("/api/users", userRoutes); // Use the correct variable name
 app.use("/api/requests", requestRoutes); // Add request routes
+app.use('/api/auth', authRoutes);
 
 // Default route (optional)
 app.get('/', (req, res) => {
