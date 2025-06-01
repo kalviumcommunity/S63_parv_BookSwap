@@ -1,8 +1,3 @@
-Perfect, Parv! Here’s your complete and polished `README.md` file with your live deployment link included:
-
----
-
-```markdown
 # 📚 BookSwap – MERN Stack Capstone Project
 
 **BookSwap** is a full-stack web application that allows users to **buy, sell, or exchange books** with others in their community. It’s designed to bring together book lovers who want to share stories, save money, and discover new reads.
@@ -121,9 +116,7 @@ If you're a recruiter, developer, or book lover — I'd love to hear from you!
 
 If this project helped or inspired you, a star on GitHub means a lot!
 
-```
-
 ---
 
 Let me know if you want me to push this directly to your GitHub `BookSwap` repo, or if you want help adding screenshots, carousel previews, or issue templates later on.
-```
+
