@@ -106,7 +106,7 @@ npm run dev
 
 If you're a recruiter, developer, or book lover — I'd love to hear from you!
 
-📨 [LinkedIn](https://www.linkedin.com/in/your-link)
+📨 [LinkedIn](www.linkedin.com/in/parvjhanwar)
 🌐 [Live App](https://book-swap-lac.vercel.app/)
 💻 GitHub: [prvcds](https://github.com/prvcds)
 
